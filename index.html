@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Journal</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ---- tokens ---- */
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #5c5a55;
+    --paper: #f0ebe0;
+    --page: #fbfaf6;
+    --rule: #ddd8cc;
+    --mustard: #d59a3e;
+    --font: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --mono: "Courier Prime", "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --ink: #f0ece3; --ink-soft: #a9a49a; --paper: #131210; --page: #1c1b18; --rule: #2c2a26; }
+  }
+  html { background: var(--page); }
+  body { margin: 0; font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; }
+
+
+  /* ---- journal menu ---- */
+  .has-menu .menu { position: absolute; left: 0; right: 0; top: 100%; background: var(--paper); border-bottom: 1px solid var(--rule); opacity: 0; visibility: hidden; transform: translateY(-4px); transition: opacity 160ms ease, transform 160ms ease, visibility 160ms; z-index: 20; }
+  .has-menu:hover .menu, .has-menu:focus-within .menu { opacity: 1; visibility: visible; transform: none; }
+  .menu-inner { max-width: 1040px; margin: 0 auto; padding: 36px clamp(16px, 4vw, 48px) 44px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(24px, 4vw, 56px); }
+  .mhead { margin: 0 0 14px; color: var(--ink); font-weight: 700; }
+  .mpic { display: block; aspect-ratio: 3 / 2; background: #e8e2d4; border-radius: 4px; overflow: hidden; margin-bottom: 18px; }
+  .mpic svg { display: block; width: 100%; height: 100%; }
+  .mlist { list-style: none; margin: 0; padding: 0; }
+  .links .mlist li a { display: block; padding: 10px 12px; font-size: 15px; line-height: 1.35; border-left: 2px solid transparent; border-bottom: 0; color: var(--ink); }
+  .mlist li.first a { background: var(--page); border-left-color: var(--mustard); }
+  .mlist li a:hover { border-left-color: var(--ink); background: var(--page); }
+  @media (max-width: 720px) { .has-menu .menu { display: none; } }
+
+
+  /* ---- kit menu ---- */
+  .kmenu-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); position: relative; }
+  .kcats { list-style: none; margin: 0; padding: 0; grid-column: 1; }
+  .links .kcats > li > a { display: block; padding: 10px 12px; font-size: 15px; line-height: 1.35; border-left: 2px solid transparent; border-bottom: 0; color: var(--ink); }
+  .kcats > li:hover > a { background: var(--page); border-left-color: var(--mustard); }
+  .kcats:not(:hover) > li.first > a { background: var(--page); border-left-color: var(--mustard); }
+  .sub { list-style: none; margin: 0; padding: 0; position: absolute; top: 36px; left: calc(33.333% + 12px); width: calc(33.333% - 32px); display: none; }
+  .kcat:hover .sub, .kcats:not(:hover) .kcat.first .sub, .kcat:focus-within .sub { display: block; }
+  .sub-brands { columns: 2; column-gap: 8px; }
+  .sub-brands li { break-inside: avoid; }
+  .links .sub li a { display: block; padding: 10px 12px; font-size: 15px; line-height: 1.35; border-left: 2px solid transparent; border-bottom: 0; color: var(--ink); }
+  .links .sub li a:hover { border-left-color: var(--ink); background: var(--page); }
+  .links .kfeat { grid-column: 3; display: block; padding: 0; color: var(--ink); border: 0; }
+  .kfeat-pic { display: block; aspect-ratio: 4 / 3; background: #e8e2d4; border-radius: 4px; overflow: hidden; margin-bottom: 14px; }
+  .kfeat-pic svg { display: block; width: 100%; height: 100%; }
+  .kfeat .lbl { display: block; color: var(--ink-soft); margin-bottom: 6px; }
+  .kfeat-title { display: block; font-size: 20px; font-weight: 500; line-height: 1.25; margin-bottom: 8px; }
+  .kfeat-link { display: inline-block; font-size: 14px; border-bottom: 1px solid var(--ink); padding-bottom: 1px; }
+  .kfeat:hover .kfeat-title { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  @media (max-width: 720px) { .has-menu .menu { display: none; } }
+
+  /* ---- labels: the label-maker face, only where a label would be ---- */
+  .lbl { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .tag { display: inline-block; font-family: var(--mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; background: var(--ink); color: var(--page); padding: 4px 7px 2px; border-radius: 2px; line-height: 1.2; vertical-align: middle; }
+
+  /* ---- nav ---- */
+  .nav {
+    position: sticky; top: 0; z-index: 10;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    height: 64px; padding: 0 clamp(16px, 4vw, 48px);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+  }
+  .nav a { color: inherit; text-decoration: none; }
+  .nav a:focus-visible { outline: 2px solid var(--mustard); outline-offset: 6px; border-radius: 2px; }
+
+  .home { display: inline-flex; align-items: center; height: 100%; padding: 0 clamp(16px, 3vw, 32px); }
+
+  .links.left  { justify-content: flex-end; }
+  .links.right { justify-content: flex-start; }
+
+
+  .links li { position: static; }
+  .links { display: flex; gap: clamp(20px, 3.5vw, 40px); margin: 0; padding: 0; list-style: none; }
+  .links a {
+    display: inline-block; padding: 21px 0 19px;
+    font-size: 15px; font-weight: 400; letter-spacing: 0.01em;
+    border-bottom: 2px solid transparent;
+    transition: border-color 160ms ease, color 160ms ease;
+  }
+  .links a:hover { border-color: var(--ink); }
+  .links a[aria-current="page"] { border-color: var(--mustard); font-weight: 500; }
+
+  /* ---- the eye ---- */
+  .eye {
+    --eye-ink: var(--ink);
+    --eye-speed: 220ms;
+    display: block; width: 48px; height: auto; overflow: visible;
+  }
+  .eye * { transition: transform var(--eye-speed) cubic-bezier(.4,0,.2,1); }
+  .eye .lashes, .eye .upper { transform-origin: 0 0; }
+  .eye .pupil { transform-origin: 0 36px; }
+  .eye .gaze { transition: transform 380ms cubic-bezier(.3,.7,.2,1); }
+  .eye .gaze.back { transition: transform 200ms cubic-bezier(.2,.8,.2,1); }
+  .home:hover .lashes, .home:hover .upper,
+  .home:focus-visible .lashes, .home:focus-visible .upper,
+  .eye.blink .lashes, .eye.blink .upper { transform: scaleY(-1); }
+  .home:hover .pupil, .home:focus-visible .pupil, .eye.blink .pupil { transform: scaleY(0); }
+  @media (prefers-reduced-motion: reduce) { .eye * { transition: none; } }
+
+
+  /* ---- footer ---- */
+  .foot {
+    margin-top: 96px; border-top: 1px solid var(--rule); background: var(--paper);
+    padding: 40px clamp(16px, 4vw, 48px) 48px;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 32px; align-items: start;
+    font-size: 14px; color: var(--ink-soft);
+  }
+  .foot a { color: inherit; text-decoration: none; border-bottom: 1px solid transparent; }
+  .foot a:hover { color: var(--ink); border-color: var(--ink); }
+  .foot a:focus-visible { outline: 2px solid var(--mustard); outline-offset: 4px; }
+  .foot ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  .foot .cols { display: flex; flex-wrap: wrap; gap: 12px 48px; }
+  .foot .small { text-align: right; line-height: 1.6; }
+  .foot-lead { display: flex; flex-direction: column; gap: 14px; }
+  .tagline { margin: 0; font-size: 15px; color: var(--ink); }
+  .lockup { display: inline-flex; align-items: center; gap: 14px; color: var(--ink); border-bottom: 0 !important; }
+  .lockup:hover { color: var(--ink); }
+  .eye-closed { display: block; width: 44px; height: 22px; color: var(--ink); flex: none; }
+  .wordmark { font-size: 18px; font-weight: 500; letter-spacing: 0.01em; line-height: 1; padding-top: 2px; }
+  @media (max-width: 560px) {
+    .foot { grid-template-columns: 1fr; gap: 24px; }
+    .foot .small { text-align: left; }
+  }
+
+
+  /* ---- journal ---- */
+  .journal { max-width: 1040px; margin: 0 auto; padding: 56px clamp(16px, 4vw, 48px) 0; color: var(--ink); }
+  .journal a { color: inherit; text-decoration: none; }
+  .lead { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 40px clamp(24px, 4vw, 56px); align-items: end; padding-bottom: 56px; border-bottom: 1px solid var(--rule); }
+  .lead .pic { aspect-ratio: 3 / 2; }
+  .kicker { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 12px; }
+  .kicker b { font-weight: 700; color: var(--ink); }
+  .lead h1 { font-size: clamp(28px, 3.6vw, 40px); font-weight: 500; line-height: 1.15; margin: 0 0 16px; letter-spacing: -0.01em; }
+  .stand { font-size: 17px; line-height: 1.6; color: var(--ink-soft); margin: 0 0 20px; max-width: 32em; }
+  .more { font-size: 15px; border-bottom: 1px solid var(--ink); padding-bottom: 1px; }
+  .lead a:hover h1, .post a:hover h2 { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+  .pic { display: block; background: #e8e2d4; border-radius: 4px; overflow: hidden; }
+  .pic svg { display: block; width: 100%; height: 100%; }
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px clamp(20px, 3vw, 40px); }
+  .strand { padding: 56px 0 0; }
+  .strand-head { display: flex; align-items: baseline; gap: 16px; padding-bottom: 16px; margin-bottom: 28px; border-bottom: 1px solid var(--rule); }
+  .strand-head h2 { font-family: var(--mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 700; margin: 0; }
+  .strand-head p { font-size: 15px; color: var(--ink-soft); margin: 0; }
+  .post .pic { aspect-ratio: 4 / 3; margin-bottom: 18px; }
+  .post h2 { font-size: 20px; font-weight: 500; line-height: 1.3; margin: 0 0 8px; }
+  .post p { font-size: 15px; line-height: 1.55; color: var(--ink-soft); margin: 0; }
+  .post .kicker { margin-bottom: 8px; }
+  .older { text-align: center; padding: 64px 0 0; font-size: 15px; }
+  .older a { border-bottom: 1px solid var(--ink); padding-bottom: 1px; }
+  @media (max-width: 860px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 720px) { .lead { grid-template-columns: 1fr; gap: 24px; } }
+  @media (max-width: 520px) { .grid { grid-template-columns: 1fr; gap: 40px; } }
+
+  /* ---- demo content, delete on your site ---- */
+  main { max-width: 640px; margin: 0 auto; padding: 96px clamp(16px, 4vw, 48px); color: var(--ink-soft); font-size: 17px; line-height: 1.6; }
+  main h1 { font-size: 28px; font-weight: 500; color: var(--ink); margin: 0 0 16px; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <nav aria-label="Main, left">
+    <ul class="links left">
+      <li class="has-menu"><a href="index.html" aria-current="page">Journal</a>
+      <div class="menu" role="region" aria-label="Journal sections">
+      <div class="menu-inner">
+      <div class="mcol">
+        <p class="lbl mhead">Inspiration</p>
+        <a class="mpic" href="index.html" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><path d="M0 250 Q150 200 300 240 T600 230 L600 400 L0 400 Z" fill="#c9bfa8"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M0 250 Q150 200 300 240 T600 230"/>
+        <path d="M120 250 L120 190"/><circle cx="120" cy="160" r="34" fill="#c9bfa8"/><circle cx="96" cy="176" r="24" fill="#c9bfa8"/><circle cx="146" cy="178" r="24" fill="#c9bfa8"/>
+        <path d="M430 236 L430 170"/><circle cx="430" cy="130" r="42" fill="#c9bfa8"/><circle cx="398" cy="152" r="28" fill="#c9bfa8"/><circle cx="464" cy="154" r="28" fill="#c9bfa8"/>
+        <path d="M260 400 Q250 330 300 290 Q340 262 320 240"/><path d="M340 400 Q330 330 370 295 Q400 270 388 244"/></g></svg></a>
+        <ul class="mlist">
+          <li class="first"><a href="index.html">Thirty things worth doing before you're thirty</a></li>
+          <li><a href="index.html">Surfing in October, badly</a></li>
+          <li><a href="index.html">Epping Forest, end to end</a></li>
+        </ul>
+      </div>
+      <div class="mcol">
+        <p class="lbl mhead">Practical</p>
+        <a class="mpic" href="index.html" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><rect x="0" y="260" width="600" height="140" fill="#c9bfa8"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M0 260 L600 260"/>
+        <path d="M228 128 L300 102 L372 128 L392 220 L360 226 L360 252 L240 252 L240 226 L208 220 Z" fill="#b5a88c"/><path d="M300 102 L300 252"/>
+        <rect x="420" y="190" width="70" height="70" rx="6" fill="#e8e2d4"/><path d="M420 214 L490 214"/><path d="M150 260 L150 200 L200 200 L200 260"/></g></svg></a>
+        <ul class="mlist">
+          <li class="first"><a href="index.html">Getting your kit through a British winter</a></li>
+          <li><a href="index.html">How to darn a moth hole so it holds</a></li>
+          <li><a href="index.html">When to resole, and when to let a boot go</a></li>
+        </ul>
+      </div>
+      <div class="mcol">
+        <p class="lbl mhead">Human</p>
+        <a class="mpic" href="index.html" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><rect x="0" y="0" width="600" height="400" fill="#c9bfa8"/><g stroke="#b5a88c" stroke-width="3"><path d="M0 20 L600 20"/><path d="M0 48 L600 48"/><path d="M0 76 L600 76"/><path d="M0 104 L600 104"/><path d="M0 132 L600 132"/><path d="M0 160 L600 160"/><path d="M0 188 L600 188"/><path d="M0 216 L600 216"/><path d="M0 244 L600 244"/><path d="M0 272 L600 272"/><path d="M0 300 L600 300"/><path d="M0 328 L600 328"/><path d="M0 356 L600 356"/><path d="M0 384 L600 384"/><path d="M20 0 L20 400"/><path d="M48 0 L48 400"/><path d="M76 0 L76 400"/><path d="M104 0 L104 400"/><path d="M132 0 L132 400"/><path d="M160 0 L160 400"/><path d="M188 0 L188 400"/><path d="M216 0 L216 400"/><path d="M244 0 L244 400"/><path d="M272 0 L272 400"/><path d="M300 0 L300 400"/><path d="M328 0 L328 400"/><path d="M356 0 L356 400"/><path d="M384 0 L384 400"/><path d="M412 0 L412 400"/><path d="M440 0 L440 400"/><path d="M468 0 L468 400"/><path d="M496 0 L496 400"/><path d="M524 0 L524 400"/><path d="M552 0 L552 400"/><path d="M580 0 L580 400"/></g>
+        <ellipse cx="300" cy="200" rx="70" ry="52" fill="#e8e2d4"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="300" cy="200" rx="70" ry="52"/><path d="M240 190 L300 190"/><path d="M240 210 L322 210"/><path d="M240 230 L286 230"/><path d="M322 210 L470 110"/><circle cx="470" cy="110" r="4" fill="#1a1a1a"/></g></svg></a>
+        <ul class="mlist">
+          <li class="first"><a href="index.html">The vanishing hole</a></li>
+          <li><a href="index.html">Maps of wear and tear</a></li>
+          <li><a href="index.html">The last cloth mill in London</a></li>
+          <li><a href="index.html">A jeans factory with a repair bench</a></li>
+        </ul>
+      </div>
+      </div>
+      </div>
+      </li>
+      <li><a href="mending.html">Mending</a></li>
+    </ul>
+  </nav>
+
+  <a class="home" href="index.html" aria-label="Home">
+    <svg class="eye" viewBox="-120 -80 240 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+      <g class="lashes" stroke="var(--eye-ink)" stroke-width="10" fill="none">
+        <path d="M-80 -8 L-102 -25"/><path d="M-58 -22 L-73 -48"/><path d="M-32 -30 L-40 -58"/>
+        <path d="M-4 -33 L-4 -62"/><path d="M24 -31 L32 -59"/><path d="M52 -24 L67 -50"/><path d="M76 -10 L98 -27"/>
+        <g fill="var(--eye-ink)" stroke="none">
+          <circle cx="-102" cy="-25" r="5"/><circle cx="-73" cy="-48" r="5"/><circle cx="-40" cy="-58" r="5"/>
+          <circle cx="-4" cy="-62" r="5"/><circle cx="32" cy="-59" r="5"/><circle cx="67" cy="-50" r="5"/><circle cx="98" cy="-27" r="5"/>
+        </g>
+      </g>
+      <clipPath id="eye-clip"><path d="M-96 0 Q-44 -36 -2 -36 Q42 -36 96 0 Q42 36 -2 36 Q-44 36 -96 0 Z"/></clipPath>
+      <g class="gaze" clip-path="url(#eye-clip)">
+        <circle class="pupil" cx="-2" cy="0" r="35" fill="var(--eye-ink)"/>
+      </g>
+      <path class="upper" d="M-96 0 Q-44 -36 -2 -36 Q42 -36 96 0" fill="none" stroke="var(--eye-ink)" stroke-width="12" stroke-linecap="round"/>
+      <path class="lower" d="M-96 0 Q-44 36 -2 36 Q42 36 96 0" fill="none" stroke="var(--eye-ink)" stroke-width="12" stroke-linecap="round"/>
+    </svg>
+    </a>
+
+  <nav aria-label="Main, right">
+    <ul class="links right">
+      <li class="has-menu"><a href="kit.html">Kit</a>
+      <div class="menu kmenu" role="region" aria-label="Kit sections">
+      <div class="menu-inner kmenu-inner">
+        <ul class="kcats">
+          <li class="kcat first"><a href="kit.html">Brands</a>
+            <ul class="sub sub-brands">
+              <li><a href="kit.html">Barbour</a></li>
+              <li><a href="kit.html">Big John</a></li>
+              <li><a href="kit.html">Darn Tough</a></li>
+              <li><a href="kit.html">Edwin</a></li>
+              <li><a href="kit.html">Filson</a></li>
+              <li><a href="kit.html">Good On</a></li>
+              <li><a href="kit.html">Knitto Knitwear</a></li>
+              <li><a href="kit.html">Naked and Famous</a></li>
+              <li><a href="kit.html">Paraboot</a></li>
+              <li><a href="kit.html">Red Wing Shoes</a></li>
+              <li><a href="kit.html">Samurai Jeans</a></li>
+              <li><a href="kit.html">Service Works</a></li>
+              <li><a href="kit.html">Stone Island</a></li>
+              <li><a href="kit.html">Universal Works</a></li>
+            </ul>
+          </li>
+          <li class="kcat"><a href="kit.html">Outerwear</a>
+            <ul class="sub">
+              <li><a href="kit.html">Everything in outerwear</a></li>
+              <li><a href="kit.html">Barbour waxed cotton</a></li>
+              <li><a href="kit.html">Filson tin cloth</a></li>
+              <li><a href="kit.html">Stone Island shells</a></li>
+            </ul>
+          </li>
+          <li class="kcat"><a href="kit.html">Denim</a>
+            <ul class="sub">
+              <li><a href="kit.html">Everything in denim</a></li>
+              <li><a href="kit.html">Edwin</a></li>
+              <li><a href="kit.html">Naked and Famous</a></li>
+              <li><a href="kit.html">Samurai Jeans</a></li>
+              <li><a href="kit.html">Big John</a></li>
+            </ul>
+          </li>
+          <li class="kcat"><a href="kit.html">Knitwear and basics</a>
+            <ul class="sub">
+              <li><a href="kit.html">Knitto wool crew</a></li>
+              <li><a href="kit.html">Good On heavyweight tees</a></li>
+            </ul>
+          </li>
+          <li class="kcat"><a href="kit.html">Trousers and shirts</a>
+            <ul class="sub">
+              <li><a href="kit.html">Service Works chef trousers</a></li>
+              <li><a href="kit.html">Universal Works shirts</a></li>
+            </ul>
+          </li>
+          <li class="kcat"><a href="kit.html">Footwear</a>
+            <ul class="sub">
+              <li><a href="kit.html">Paraboot</a></li>
+              <li><a href="kit.html">Red Wing Shoes</a></li>
+            </ul>
+          </li>
+          <li class="kcat"><a href="kit.html">Socks</a>
+            <ul class="sub">
+              <li><a href="kit.html">Darn Tough</a></li>
+            </ul>
+          </li>
+        </ul>
+        <a class="kfeat" href="mending.html">
+          <span class="kfeat-pic"><svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="300" height="300" fill="#e8e2d4"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M96 88 L52 106 L38 220 L70 224 L76 170 L78 250 L222 250 L224 170 L230 224 L262 220 L248 106 L204 88" fill="#c9bfa8"/><path d="M96 88 Q125 118 150 106 Q175 118 204 88"/><path d="M96 88 L118 72 L150 82 L182 72 L204 88" fill="#b5a88c"/><path d="M150 106 L150 250"/><rect x="92" y="180" width="44" height="52" rx="4" fill="#c9bfa8"/><rect x="164" y="180" width="44" height="52" rx="4" fill="#c9bfa8"/></g></svg></span>
+          <span class="lbl">Practical</span>
+          <span class="kfeat-title">Waxed cotton, kept</span>
+          <span class="kfeat-link">Read the guide</span>
+        </a>
+      </div>
+      </div>
+      </li>
+      <li><a href="bench.html">Bench</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main class="journal">
+  <section class="lead">
+    <a class="pic" href="#" aria-hidden="true" tabindex="-1"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><rect x="0" y="0" width="600" height="400" fill="#c9bfa8"/><g stroke="#b5a88c" stroke-width="3"><path d="M0 20 L600 20"/><path d="M0 48 L600 48"/><path d="M0 76 L600 76"/><path d="M0 104 L600 104"/><path d="M0 132 L600 132"/><path d="M0 160 L600 160"/><path d="M0 188 L600 188"/><path d="M0 216 L600 216"/><path d="M0 244 L600 244"/><path d="M0 272 L600 272"/><path d="M0 300 L600 300"/><path d="M0 328 L600 328"/><path d="M0 356 L600 356"/><path d="M0 384 L600 384"/><path d="M20 0 L20 400"/><path d="M48 0 L48 400"/><path d="M76 0 L76 400"/><path d="M104 0 L104 400"/><path d="M132 0 L132 400"/><path d="M160 0 L160 400"/><path d="M188 0 L188 400"/><path d="M216 0 L216 400"/><path d="M244 0 L244 400"/><path d="M272 0 L272 400"/><path d="M300 0 L300 400"/><path d="M328 0 L328 400"/><path d="M356 0 L356 400"/><path d="M384 0 L384 400"/><path d="M412 0 L412 400"/><path d="M440 0 L440 400"/><path d="M468 0 L468 400"/><path d="M496 0 L496 400"/><path d="M524 0 L524 400"/><path d="M552 0 L552 400"/><path d="M580 0 L580 400"/></g>
+        <ellipse cx="300" cy="200" rx="70" ry="52" fill="#e8e2d4"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="300" cy="200" rx="70" ry="52"/><path d="M240 190 L300 190"/><path d="M240 210 L322 210"/><path d="M240 230 L286 230"/><path d="M322 210 L470 110"/><circle cx="470" cy="110" r="4" fill="#1a1a1a"/></g></svg></a>
+    <div>
+      <p class="kicker"><b>Human</b> Bow Lane, EC4</p>
+      <a href="#"><h1>The vanishing hole</h1></a>
+      <p class="stand">Three quarters of what comes through the door is moth. Michael Norman of London Invisible Mending on rebuilding cloth thread by thread, using yarn harvested from the garment's own seams, and why it takes three weeks.</p>
+      <a class="more" href="#">Read the interview</a>
+    </div>
+  </section>
+
+  <section class="strand">
+    <header class="strand-head"><h2>Inspiration</h2><p>Things worth getting out of the house for.</p></header>
+    <div class="grid">
+      <article class="post">
+        <a href="#">
+          <span class="pic"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><rect x="150" y="60" width="300" height="300" rx="6" fill="#f6f3ec"/><path d="M200 110 L220 110"/><path d="M250 110 L330 110"/><path d="M200 150 L220 150"/><path d="M250 150 L367 150"/><path d="M200 190 L220 190"/><path d="M250 190 L404 190"/><path d="M200 230 L220 230"/><path d="M250 230 L351 230"/><path d="M200 270 L220 270"/><path d="M250 270 L388 270"/><path d="M200 310 L220 310"/><path d="M250 310 L335 310"/></g>
+        <g fill="none" stroke="#b8521d" stroke-width="7" stroke-linecap="round"><path d="M200 105 L208 115 L222 96"/><path d="M200 185 L208 195 L222 176"/></g></svg></span>
+          <p class="kicker"><b>Inspiration</b> A list</p>
+          <h2>Thirty things worth doing before you're thirty</h2>
+          <p>None of them involve a summit. Most involve a train, a flask and coming home slightly wet.</p>
+        </a>
+      </article>
+      <article class="post">
+        <a href="#">
+          <span class="pic"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><path d="M0 200 L600 200 L600 400 L0 400 Z" fill="#a9b7c2"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M0 200 L600 200"/>
+        <path d="M0 300 Q60 270 120 300 T240 300 T360 300 T480 300 T600 300"/><path d="M0 350 Q60 320 120 350 T240 350 T360 350 T480 350 T600 350"/>
+        <path d="M220 250 Q300 200 400 240 Q320 262 220 250 Z" fill="#d59a3e"/><path d="M300 222 L300 246"/></g></svg></span>
+          <p class="kicker"><b>Inspiration</b> Porthtowan, Cornwall</p>
+          <h2>Surfing in October, badly</h2>
+          <p>The water is warmer than in May and the car park is empty. On learning something new at an age when you'd rather not look foolish.</p>
+        </a>
+      </article>
+      <article class="post">
+        <a href="#">
+          <span class="pic"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><path d="M0 250 Q150 200 300 240 T600 230 L600 400 L0 400 Z" fill="#c9bfa8"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M0 250 Q150 200 300 240 T600 230"/>
+        <path d="M120 250 L120 190"/><circle cx="120" cy="160" r="34" fill="#c9bfa8"/><circle cx="96" cy="176" r="24" fill="#c9bfa8"/><circle cx="146" cy="178" r="24" fill="#c9bfa8"/>
+        <path d="M430 236 L430 170"/><circle cx="430" cy="130" r="42" fill="#c9bfa8"/><circle cx="398" cy="152" r="28" fill="#c9bfa8"/><circle cx="464" cy="154" r="28" fill="#c9bfa8"/>
+        <path d="M260 400 Q250 330 300 290 Q340 262 320 240"/><path d="M340 400 Q330 330 370 295 Q400 270 388 244"/></g></svg></span>
+          <p class="kicker"><b>Inspiration</b> Chingford to Epping</p>
+          <h2>Epping Forest, end to end, in the wrong direction</h2>
+          <p>Twelve miles with a wax jacket that needed the outing more than we did, and an argument about whether a hornbeam is a beech. It isn't.</p>
+        </a>
+      </article>
+    </div>
+  </section>
+
+  <section class="strand">
+    <header class="strand-head"><h2>Practical</h2><p>How to look after what you've got.</p></header>
+    <div class="grid">
+      <article class="post">
+        <a href="#">
+          <span class="pic"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><rect x="0" y="260" width="600" height="140" fill="#c9bfa8"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M0 260 L600 260"/>
+        <path d="M228 128 L300 102 L372 128 L392 220 L360 226 L360 252 L240 252 L240 226 L208 220 Z" fill="#b5a88c"/><path d="M300 102 L300 252"/>
+        <rect x="420" y="190" width="70" height="70" rx="6" fill="#e8e2d4"/><path d="M420 214 L490 214"/><path d="M150 260 L150 200 L200 200 L200 260"/></g></svg></span>
+          <p class="kicker"><b>Practical</b> Before the clocks change</p>
+          <h2>Getting your kit through a British winter</h2>
+          <p>Re-wax the jacket now, not in December. Dubbin the boots. Air the wool. A Sunday of small jobs that saves you a season of damp.</p>
+        </a>
+      </article>
+      <article class="post">
+        <a href="#">
+          <span class="pic"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><rect x="0" y="0" width="600" height="400" fill="#d9c9a3"/><g stroke="#b8521d" stroke-width="9" stroke-linecap="round"><path d="M190 130 L190 270"/><path d="M220 130 L220 270"/><path d="M250 130 L250 270"/><path d="M280 130 L280 270"/><path d="M310 130 L310 270"/><path d="M340 130 L340 270"/><path d="M370 130 L370 270"/><path d="M400 130 L400 270"/><path d="M170 150 L430 150"/><path d="M170 180 L430 180"/><path d="M170 210 L430 210"/><path d="M170 240 L430 240"/><path d="M170 270 L430 270"/></g><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M150 110 Q300 90 450 110 Q470 200 450 290 Q300 310 150 290 Q130 200 150 110 Z"/></g></svg></span>
+          <p class="kicker"><b>Practical</b> Ten minutes, one needle</p>
+          <h2>How to darn a moth hole so it holds</h2>
+          <p>The one repair everybody should know. Where to start, which way to weave, and when to leave it visible on purpose.</p>
+        </a>
+      </article>
+      <article class="post">
+        <a href="#">
+          <span class="pic"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><rect x="0" y="270" width="600" height="130" fill="#c9bfa8"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M0 270 L600 270"/>
+        <path d="M180 120 L260 120 L260 200 L340 230 L340 270 L150 270 L150 230 L180 220 Z" fill="#8a5a33"/><path d="M190 150 L250 150"/><path d="M190 175 L250 175"/>
+        <path d="M390 270 L390 240 Q420 225 450 240 L450 270"/><path d="M400 232 L440 232"/>
+        <path d="M110 250 Q120 236 130 250"/></g></svg></span>
+          <p class="kicker"><b>Practical</b> Every two to four years</p>
+          <h2>When to resole, and when to let a boot go</h2>
+          <p>Welted boots can be rebuilt for decades. Glued ones can't. How to tell what you've got, and what a resole should cost.</p>
+        </a>
+      </article>
+    </div>
+  </section>
+
+  <section class="strand">
+    <header class="strand-head"><h2>Human</h2><p>The people in London who make things and mend them.</p></header>
+    <div class="grid">
+      <article class="post">
+        <a href="#">
+          <span class="pic"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><rect x="0" y="0" width="600" height="400" fill="#d9c9a3"/><g stroke="#b8521d" stroke-width="9" stroke-linecap="round"><path d="M190 130 L190 270"/><path d="M220 130 L220 270"/><path d="M250 130 L250 270"/><path d="M280 130 L280 270"/><path d="M310 130 L310 270"/><path d="M340 130 L340 270"/><path d="M370 130 L370 270"/><path d="M400 130 L400 270"/><path d="M170 150 L430 150"/><path d="M170 180 L430 180"/><path d="M170 210 L430 210"/><path d="M170 240 L430 240"/><path d="M170 270 L430 270"/></g><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M150 110 Q300 90 450 110 Q470 200 450 290 Q300 310 150 290 Q130 200 150 110 Z"/></g></svg></span>
+          <p class="kicker"><b>Human</b> South London</p>
+          <h2>Maps of wear and tear</h2>
+          <p>Celia Pym has been darning since 2007, including things from museum archives. On repair that announces itself.</p>
+        </a>
+      </article>
+      <article class="post">
+        <a href="#">
+          <span class="pic"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><rect x="0" y="280" width="600" height="120" fill="#c9bfa8"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M0 280 L600 280"/>
+        <rect x="120" y="90" width="360" height="190" rx="4" fill="#b5a88c"/><path d="M120 90 L100 280"/><path d="M480 90 L500 280"/>
+        <path d="M150 90 L150 280"/><path d="M180 90 L180 280"/><path d="M210 90 L210 280"/><path d="M240 90 L240 280"/><path d="M270 90 L270 280"/><path d="M300 90 L300 280"/><path d="M330 90 L330 280"/><path d="M360 90 L360 280"/><path d="M390 90 L390 280"/><path d="M420 90 L420 280"/><path d="M450 90 L450 280"/><path d="M480 90 L480 280"/><path d="M120 200 L480 200" stroke="#3d5a80" stroke-width="10"/><path d="M120 224 L480 224" stroke="#3d5a80" stroke-width="10"/></g></svg></span>
+          <p class="kicker"><b>Human</b> Epping</p>
+          <h2>The last cloth mill in London</h2>
+          <p>London Cloth Company weaves on Victorian looms rescued from scrap. What it takes to make cloth inside the M25.</p>
+        </a>
+      </article>
+      <article class="post">
+        <a href="#">
+          <span class="pic"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><rect x="0" y="260" width="600" height="140" fill="#c9bfa8"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M0 260 L600 260"/><path d="M150 260 L150 130 L400 130 L400 180 L380 180 L380 260 Z" fill="#b5a88c"/><path d="M150 200 L400 200"/><path d="M165 260 L165 240 L470 240 L470 260"/><path d="M400 155 L440 155"/><path d="M420 180 L420 250"/><circle cx="196" cy="170" r="16"/><path d="M236 160 L340 160"/></g></svg></span>
+          <p class="kicker"><b>Human</b> Blackhorse Lane, E17</p>
+          <h2>A jeans factory with a repair bench</h2>
+          <p>Inside the only working denim factory in London. Four to six weeks' queue, a published tariff, and the case for a reinforced crotch over a new pair.</p>
+        </a>
+      </article>
+    </div>
+  </section>
+
+  <p class="older"><a href="#">Everything we've written</a></p>
+</main>
+
+<footer class="foot">
+  <div class="foot-lead">
+  <a class="lockup" href="index.html" aria-label="Home">
+    <svg class="eye-closed" viewBox="-120 -60 240 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M-96 -6 Q-44 30 -2 30 Q42 30 96 -6" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/>
+      <g stroke="currentColor" stroke-width="10" fill="none">
+        <path d="M-80 2 L-102 19"/><path d="M-58 16 L-73 42"/><path d="M-32 24 L-40 52"/><path d="M-4 27 L-4 56"/><path d="M24 25 L32 53"/><path d="M52 18 L67 44"/><path d="M76 4 L98 21"/>
+      </g>
+      <g fill="currentColor"><circle cx="-102" cy="19" r="5"/><circle cx="-73" cy="42" r="5"/><circle cx="-40" cy="52" r="5"/><circle cx="-4" cy="56" r="5"/><circle cx="32" cy="53" r="5"/><circle cx="67" cy="44" r="5"/><circle cx="98" cy="21" r="5"/></g>
+    </svg>
+  </a>
+  <p class="tagline">Go the long way round.</p>
+  </div>
+  <div class="cols">
+    <ul>
+      <li><a href="index.html">Journal</a></li>
+      <li><a href="mending.html">Mending</a></li>
+      <li><a href="kit.html">Kit</a></li>
+      <li><a href="bench.html">Bench</a></li>
+    </ul>
+    <ul>
+      <li><a href="#">About</a></li>
+      <li><a href="#">Letters</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </div>
+  <div class="small lbl">
+    London<br>
+    &copy; 2026
+  </div>
+</footer>
+
+<script>
+  // Every 20 seconds the pupil glances towards the pointer, holds, then returns.
+  // The pupil narrows slightly as it looks aside and is clamped so its edge never crosses the lid line.
+  (function () {
+    var eye = document.querySelector('.eye');
+    var gaze = eye && eye.querySelector('.gaze');
+    if (!gaze || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    // Almond half-height at a given x (upper lid is the bezier -96,0 -> -44,-36 -> -2,-36 mirrored).
+    function halfHeight(x) {
+      x = Math.abs(x + 2) - 2; if (x > -2) x = -2 - (x + 2);            // fold onto the left half
+      if (x <= -96) return 0;
+      var lo = 0, hi = 1;
+      for (var i = 0; i < 20; i++) { var m = (lo + hi) / 2, bx = (1-m)*(1-m)*-96 + 2*(1-m)*m*-44 + m*m*-2; if (bx < x) lo = m; else hi = m; }
+      var t = (lo + hi) / 2;
+      return -(2*(1-t)*t*-36 + t*t*-36);
+    }
+    var R = 35, SHRINK = 0.86, LEEWAY = 5;                                  // lid stroke is 12 wide, so ~5 units of overlap is invisible
+    function fits(tx, ty) {
+      var r = R * SHRINK;
+      for (var k = 0; k < 36; k++) {
+        var a = k / 36 * Math.PI * 2, x = -2 + tx + r * Math.cos(a), y = ty + r * Math.sin(a);
+        if (Math.abs(y) > halfHeight(x) + LEEWAY) return false;
+      }
+      return true;
+    }
+
+    var px = null, py = null;
+    addEventListener('pointermove', function (e) { px = e.clientX; py = e.clientY; }, { passive: true });
+
+    function glance() {
+      if (px === null) return;
+      var b = eye.getBoundingClientRect();
+      var dx = px - (b.left + b.width / 2), dy = py - (b.top + b.height / 2);
+      var d = Math.hypot(dx, dy) || 1, reach = Math.min(1, d / 300);
+      var tx = (dx / d) * 44 * reach, ty = (dy / d) * 11 * reach;
+      var s = 1;
+      while (!fits(tx * s, ty * s) && s > 0) s -= 0.05;                   // pull the glance back until the pupil sits inside
+      tx *= s; ty *= s;
+      gaze.classList.remove('back');
+      gaze.style.transform = 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px) translate(-2px,0) scale(' + SHRINK + ') translate(2px,0)';
+      setTimeout(function () { gaze.classList.add('back'); gaze.style.transform = ''; }, 900);   // hold ~½ s after the glide out, then snap back
+    }
+    setInterval(glance, 20000);
+
+    // Idle blink: one quick close-and-open at a random interval between 20 and 40 seconds.
+    function blink() {
+      eye.classList.add('blink');
+      setTimeout(function () { eye.classList.remove('blink'); }, 260);
+      setTimeout(blink, 20000 + Math.random() * 20000);
+    }
+    setTimeout(blink, 12000 + Math.random() * 12000);
+  })();
+
+  // Tab favicon: the eye closes when you leave the tab and opens when you come back.
+  (function () {
+    var icon = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
+    if (!icon) return;
+    var open = icon.href, closed = open.replace('favicon.svg', 'favicon-closed.svg');
+    document.addEventListener('visibilitychange', function () {
+      icon.href = document.hidden ? closed : open;
+    });
+  })();
+</script>
+</body>
+</html>

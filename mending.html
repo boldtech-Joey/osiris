@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mending</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ---- tokens ---- */
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #5c5a55;
+    --paper: #f0ebe0;
+    --page: #fbfaf6;
+    --rule: #ddd8cc;
+    --mustard: #d59a3e;
+    --font: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --mono: "Courier Prime", "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --ink: #f0ece3; --ink-soft: #a9a49a; --paper: #131210; --page: #1c1b18; --rule: #2c2a26; }
+  }
+  html { background: var(--page); }
+  body { margin: 0; font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; }
+
+
+  /* ---- journal menu ---- */
+  .has-menu .menu { position: absolute; left: 0; right: 0; top: 100%; background: var(--paper); border-bottom: 1px solid var(--rule); opacity: 0; visibility: hidden; transform: translateY(-4px); transition: opacity 160ms ease, transform 160ms ease, visibility 160ms; z-index: 20; }
+  .has-menu:hover .menu, .has-menu:focus-within .menu { opacity: 1; visibility: visible; transform: none; }
+  .menu-inner { max-width: 1040px; margin: 0 auto; padding: 36px clamp(16px, 4vw, 48px) 44px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(24px, 4vw, 56px); }
+  .mhead { margin: 0 0 14px; color: var(--ink); font-weight: 700; }
+  .mpic { display: block; aspect-ratio: 3 / 2; background: #e8e2d4; border-radius: 4px; overflow: hidden; margin-bottom: 18px; }
+  .mpic svg { display: block; width: 100%; height: 100%; }
+  .mlist { list-style: none; margin: 0; padding: 0; }
+  .links .mlist li a { display: block; padding: 10px 12px; font-size: 15px; line-height: 1.35; border-left: 2px solid transparent; border-bottom: 0; color: var(--ink); }
+  .mlist li.first a { background: var(--page); border-left-color: var(--mustard); }
+  .mlist li a:hover { border-left-color: var(--ink); background: var(--page); }
+  @media (max-width: 720px) { .has-menu .menu { display: none; } }
+
+
+  /* ---- kit menu ---- */
+  .kmenu-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); position: relative; }
+  .kcats { list-style: none; margin: 0; padding: 0; grid-column: 1; }
+  .links .kcats > li > a { display: block; padding: 10px 12px; font-size: 15px; line-height: 1.35; border-left: 2px solid transparent; border-bottom: 0; color: var(--ink); }
+  .kcats > li:hover > a { background: var(--page); border-left-color: var(--mustard); }
+  .kcats:not(:hover) > li.first > a { background: var(--page); border-left-color: var(--mustard); }
+  .sub { list-style: none; margin: 0; padding: 0; position: absolute; top: 36px; left: calc(33.333% + 12px); width: calc(33.333% - 32px); display: none; }
+  .kcat:hover .sub, .kcats:not(:hover) .kcat.first .sub, .kcat:focus-within .sub { display: block; }
+  .sub-brands { columns: 2; column-gap: 8px; }
+  .sub-brands li { break-inside: avoid; }
+  .links .sub li a { display: block; padding: 10px 12px; font-size: 15px; line-height: 1.35; border-left: 2px solid transparent; border-bottom: 0; color: var(--ink); }
+  .links .sub li a:hover { border-left-color: var(--ink); background: var(--page); }
+  .links .kfeat { grid-column: 3; display: block; padding: 0; color: var(--ink); border: 0; }
+  .kfeat-pic { display: block; aspect-ratio: 4 / 3; background: #e8e2d4; border-radius: 4px; overflow: hidden; margin-bottom: 14px; }
+  .kfeat-pic svg { display: block; width: 100%; height: 100%; }
+  .kfeat .lbl { display: block; color: var(--ink-soft); margin-bottom: 6px; }
+  .kfeat-title { display: block; font-size: 20px; font-weight: 500; line-height: 1.25; margin-bottom: 8px; }
+  .kfeat-link { display: inline-block; font-size: 14px; border-bottom: 1px solid var(--ink); padding-bottom: 1px; }
+  .kfeat:hover .kfeat-title { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  @media (max-width: 720px) { .has-menu .menu { display: none; } }
+
+  /* ---- labels: the label-maker face, only where a label would be ---- */
+  .lbl { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .tag { display: inline-block; font-family: var(--mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; background: var(--ink); color: var(--page); padding: 4px 7px 2px; border-radius: 2px; line-height: 1.2; vertical-align: middle; }
+
+  /* ---- nav ---- */
+  .nav {
+    position: sticky; top: 0; z-index: 10;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    height: 64px; padding: 0 clamp(16px, 4vw, 48px);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+  }
+  .nav a { color: inherit; text-decoration: none; }
+  .nav a:focus-visible { outline: 2px solid var(--mustard); outline-offset: 6px; border-radius: 2px; }
+
+  .home { display: inline-flex; align-items: center; height: 100%; padding: 0 clamp(16px, 3vw, 32px); }
+
+  .links.left  { justify-content: flex-end; }
+  .links.right { justify-content: flex-start; }
+
+
+  .links li { position: static; }
+  .links { display: flex; gap: clamp(20px, 3.5vw, 40px); margin: 0; padding: 0; list-style: none; }
+  .links a {
+    display: inline-block; padding: 21px 0 19px;
+    font-size: 15px; font-weight: 400; letter-spacing: 0.01em;
+    border-bottom: 2px solid transparent;
+    transition: border-color 160ms ease, color 160ms ease;
+  }
+  .links a:hover { border-color: var(--ink); }
+  .links a[aria-current="page"] { border-color: var(--mustard); font-weight: 500; }
+
+  /* ---- the eye ---- */
+  .eye {
+    --eye-ink: var(--ink);
+    --eye-speed: 220ms;
+    display: block; width: 48px; height: auto; overflow: visible;
+  }
+  .eye * { transition: transform var(--eye-speed) cubic-bezier(.4,0,.2,1); }
+  .eye .lashes, .eye .upper { transform-origin: 0 0; }
+  .eye .pupil { transform-origin: 0 36px; }
+  .eye .gaze { transition: transform 380ms cubic-bezier(.3,.7,.2,1); }
+  .eye .gaze.back { transition: transform 200ms cubic-bezier(.2,.8,.2,1); }
+  .home:hover .lashes, .home:hover .upper,
+  .home:focus-visible .lashes, .home:focus-visible .upper,
+  .eye.blink .lashes, .eye.blink .upper { transform: scaleY(-1); }
+  .home:hover .pupil, .home:focus-visible .pupil, .eye.blink .pupil { transform: scaleY(0); }
+  @media (prefers-reduced-motion: reduce) { .eye * { transition: none; } }
+
+
+  /* ---- footer ---- */
+  .foot {
+    margin-top: 96px; border-top: 1px solid var(--rule); background: var(--paper);
+    padding: 40px clamp(16px, 4vw, 48px) 48px;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 32px; align-items: start;
+    font-size: 14px; color: var(--ink-soft);
+  }
+  .foot a { color: inherit; text-decoration: none; border-bottom: 1px solid transparent; }
+  .foot a:hover { color: var(--ink); border-color: var(--ink); }
+  .foot a:focus-visible { outline: 2px solid var(--mustard); outline-offset: 4px; }
+  .foot ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  .foot .cols { display: flex; flex-wrap: wrap; gap: 12px 48px; }
+  .foot .small { text-align: right; line-height: 1.6; }
+  .foot-lead { display: flex; flex-direction: column; gap: 14px; }
+  .tagline { margin: 0; font-size: 15px; color: var(--ink); }
+  .lockup { display: inline-flex; align-items: center; gap: 14px; color: var(--ink); border-bottom: 0 !important; }
+  .lockup:hover { color: var(--ink); }
+  .eye-closed { display: block; width: 44px; height: 22px; color: var(--ink); flex: none; }
+  .wordmark { font-size: 18px; font-weight: 500; letter-spacing: 0.01em; line-height: 1; padding-top: 2px; }
+  @media (max-width: 560px) {
+    .foot { grid-template-columns: 1fr; gap: 24px; }
+    .foot .small { text-align: left; }
+  }
+
+
+  /* ---- mending index ---- */
+  .mend { max-width: 720px; margin: 0 auto; padding: 72px clamp(16px, 4vw, 48px) 0; color: var(--ink); }
+  .mend h1 { font-size: 28px; font-weight: 500; margin: 0 0 12px; }
+  .mend .lede { font-size: 17px; line-height: 1.6; color: var(--ink-soft); max-width: 560px; margin: 0 0 56px; }
+  .mend h2 { font-family: var(--mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 700; color: var(--ink-soft); margin: 48px 0 8px; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
+  .problem { display: grid; grid-template-columns: 1fr auto; gap: 4px 24px; padding: 18px 0; border-bottom: 1px solid var(--rule); text-decoration: none; color: inherit; }
+  .problem:hover .pname { border-bottom-color: var(--ink); }
+  .problem:focus-visible { outline: 2px solid var(--mustard); outline-offset: 4px; }
+  .pname { font-size: 17px; font-weight: 500; border-bottom: 1px solid transparent; display: inline; transition: border-color 160ms ease; }
+  .verdict { font-size: 13px; color: var(--ink-soft); white-space: nowrap; align-self: start; padding-top: 3px; }
+  .verdict.you { color: var(--ink); }
+  .pline { grid-column: 1 / -1; font-size: 15px; line-height: 1.55; color: var(--ink-soft); margin: 0; }
+  .vi { width: 26px; height: 15px; color: var(--ink); display: inline-block; vertical-align: middle; }
+  .key { display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 13px; color: var(--ink-soft); margin: -36px 0 40px; }
+  .key span { display: inline-flex; align-items: center; gap: 8px; }
+  .verdict { padding-top: 6px; }
+  .checked { font-size: 13px; color: var(--ink-soft); margin: 40px 0 0; }
+  @media (max-width: 560px) { .problem { grid-template-columns: 1fr; } .verdict { padding-top: 0; } }
+
+  /* ---- demo content, delete on your site ---- */
+  main { max-width: 640px; margin: 0 auto; padding: 96px clamp(16px, 4vw, 48px); color: var(--ink-soft); font-size: 17px; line-height: 1.6; }
+  main h1 { font-size: 28px; font-weight: 500; color: var(--ink); margin: 0 0 16px; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <nav aria-label="Main, left">
+    <ul class="links left">
+      <li class="has-menu"><a href="index.html">Journal</a>
+      <div class="menu" role="region" aria-label="Journal sections">
+      <div class="menu-inner">
+      <div class="mcol">
+        <p class="lbl mhead">Inspiration</p>
+        <a class="mpic" href="index.html" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><path d="M0 250 Q150 200 300 240 T600 230 L600 400 L0 400 Z" fill="#c9bfa8"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M0 250 Q150 200 300 240 T600 230"/>
+        <path d="M120 250 L120 190"/><circle cx="120" cy="160" r="34" fill="#c9bfa8"/><circle cx="96" cy="176" r="24" fill="#c9bfa8"/><circle cx="146" cy="178" r="24" fill="#c9bfa8"/>
+        <path d="M430 236 L430 170"/><circle cx="430" cy="130" r="42" fill="#c9bfa8"/><circle cx="398" cy="152" r="28" fill="#c9bfa8"/><circle cx="464" cy="154" r="28" fill="#c9bfa8"/>
+        <path d="M260 400 Q250 330 300 290 Q340 262 320 240"/><path d="M340 400 Q330 330 370 295 Q400 270 388 244"/></g></svg></a>
+        <ul class="mlist">
+          <li class="first"><a href="index.html">Thirty things worth doing before you're thirty</a></li>
+          <li><a href="index.html">Surfing in October, badly</a></li>
+          <li><a href="index.html">Epping Forest, end to end</a></li>
+        </ul>
+      </div>
+      <div class="mcol">
+        <p class="lbl mhead">Practical</p>
+        <a class="mpic" href="index.html" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><rect x="0" y="260" width="600" height="140" fill="#c9bfa8"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M0 260 L600 260"/>
+        <path d="M228 128 L300 102 L372 128 L392 220 L360 226 L360 252 L240 252 L240 226 L208 220 Z" fill="#b5a88c"/><path d="M300 102 L300 252"/>
+        <rect x="420" y="190" width="70" height="70" rx="6" fill="#e8e2d4"/><path d="M420 214 L490 214"/><path d="M150 260 L150 200 L200 200 L200 260"/></g></svg></a>
+        <ul class="mlist">
+          <li class="first"><a href="index.html">Getting your kit through a British winter</a></li>
+          <li><a href="index.html">How to darn a moth hole so it holds</a></li>
+          <li><a href="index.html">When to resole, and when to let a boot go</a></li>
+        </ul>
+      </div>
+      <div class="mcol">
+        <p class="lbl mhead">Human</p>
+        <a class="mpic" href="index.html" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="600" height="400" fill="#e8e2d4"/><rect x="0" y="0" width="600" height="400" fill="#c9bfa8"/><g stroke="#b5a88c" stroke-width="3"><path d="M0 20 L600 20"/><path d="M0 48 L600 48"/><path d="M0 76 L600 76"/><path d="M0 104 L600 104"/><path d="M0 132 L600 132"/><path d="M0 160 L600 160"/><path d="M0 188 L600 188"/><path d="M0 216 L600 216"/><path d="M0 244 L600 244"/><path d="M0 272 L600 272"/><path d="M0 300 L600 300"/><path d="M0 328 L600 328"/><path d="M0 356 L600 356"/><path d="M0 384 L600 384"/><path d="M20 0 L20 400"/><path d="M48 0 L48 400"/><path d="M76 0 L76 400"/><path d="M104 0 L104 400"/><path d="M132 0 L132 400"/><path d="M160 0 L160 400"/><path d="M188 0 L188 400"/><path d="M216 0 L216 400"/><path d="M244 0 L244 400"/><path d="M272 0 L272 400"/><path d="M300 0 L300 400"/><path d="M328 0 L328 400"/><path d="M356 0 L356 400"/><path d="M384 0 L384 400"/><path d="M412 0 L412 400"/><path d="M440 0 L440 400"/><path d="M468 0 L468 400"/><path d="M496 0 L496 400"/><path d="M524 0 L524 400"/><path d="M552 0 L552 400"/><path d="M580 0 L580 400"/></g>
+        <ellipse cx="300" cy="200" rx="70" ry="52" fill="#e8e2d4"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="300" cy="200" rx="70" ry="52"/><path d="M240 190 L300 190"/><path d="M240 210 L322 210"/><path d="M240 230 L286 230"/><path d="M322 210 L470 110"/><circle cx="470" cy="110" r="4" fill="#1a1a1a"/></g></svg></a>
+        <ul class="mlist">
+          <li class="first"><a href="index.html">The vanishing hole</a></li>
+          <li><a href="index.html">Maps of wear and tear</a></li>
+          <li><a href="index.html">The last cloth mill in London</a></li>
+          <li><a href="index.html">A jeans factory with a repair bench</a></li>
+        </ul>
+      </div>
+      </div>
+      </div>
+      </li>
+      <li><a href="mending.html" aria-current="page">Mending</a></li>
+    </ul>
+  </nav>
+
+  <a class="home" href="index.html" aria-label="Home">
+    <svg class="eye" viewBox="-120 -80 240 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+      <g class="lashes" stroke="var(--eye-ink)" stroke-width="10" fill="none">
+        <path d="M-80 -8 L-102 -25"/><path d="M-58 -22 L-73 -48"/><path d="M-32 -30 L-40 -58"/>
+        <path d="M-4 -33 L-4 -62"/><path d="M24 -31 L32 -59"/><path d="M52 -24 L67 -50"/><path d="M76 -10 L98 -27"/>
+        <g fill="var(--eye-ink)" stroke="none">
+          <circle cx="-102" cy="-25" r="5"/><circle cx="-73" cy="-48" r="5"/><circle cx="-40" cy="-58" r="5"/>
+          <circle cx="-4" cy="-62" r="5"/><circle cx="32" cy="-59" r="5"/><circle cx="67" cy="-50" r="5"/><circle cx="98" cy="-27" r="5"/>
+        </g>
+      </g>
+      <clipPath id="eye-clip"><path d="M-96 0 Q-44 -36 -2 -36 Q42 -36 96 0 Q42 36 -2 36 Q-44 36 -96 0 Z"/></clipPath>
+      <g class="gaze" clip-path="url(#eye-clip)">
+        <circle class="pupil" cx="-2" cy="0" r="35" fill="var(--eye-ink)"/>
+      </g>
+      <path class="upper" d="M-96 0 Q-44 -36 -2 -36 Q42 -36 96 0" fill="none" stroke="var(--eye-ink)" stroke-width="12" stroke-linecap="round"/>
+      <path class="lower" d="M-96 0 Q-44 36 -2 36 Q42 36 96 0" fill="none" stroke="var(--eye-ink)" stroke-width="12" stroke-linecap="round"/>
+    </svg>
+    </a>
+
+  <nav aria-label="Main, right">
+    <ul class="links right">
+      <li class="has-menu"><a href="kit.html">Kit</a>
+      <div class="menu kmenu" role="region" aria-label="Kit sections">
+      <div class="menu-inner kmenu-inner">
+        <ul class="kcats">
+          <li class="kcat first"><a href="kit.html">Brands</a>
+            <ul class="sub sub-brands">
+              <li><a href="kit.html">Barbour</a></li>
+              <li><a href="kit.html">Big John</a></li>
+              <li><a href="kit.html">Darn Tough</a></li>
+              <li><a href="kit.html">Edwin</a></li>
+              <li><a href="kit.html">Filson</a></li>
+              <li><a href="kit.html">Good On</a></li>
+              <li><a href="kit.html">Knitto Knitwear</a></li>
+              <li><a href="kit.html">Naked and Famous</a></li>
+              <li><a href="kit.html">Paraboot</a></li>
+              <li><a href="kit.html">Red Wing Shoes</a></li>
+              <li><a href="kit.html">Samurai Jeans</a></li>
+              <li><a href="kit.html">Service Works</a></li>
+              <li><a href="kit.html">Stone Island</a></li>
+              <li><a href="kit.html">Universal Works</a></li>
+            </ul>
+          </li>
+          <li class="kcat"><a href="kit.html">Outerwear</a>
+            <ul class="sub">
+              <li><a href="kit.html">Everything in outerwear</a></li>
+              <li><a href="kit.html">Barbour waxed cotton</a></li>
+              <li><a href="kit.html">Filson tin cloth</a></li>
+              <li><a href="kit.html">Stone Island shells</a></li>
+            </ul>
+          </li>
+          <li class="kcat"><a href="kit.html">Denim</a>
+            <ul class="sub">
+              <li><a href="kit.html">Everything in denim</a></li>
+              <li><a href="kit.html">Edwin</a></li>
+              <li><a href="kit.html">Naked and Famous</a></li>
+              <li><a href="kit.html">Samurai Jeans</a></li>
+              <li><a href="kit.html">Big John</a></li>
+            </ul>
+          </li>
+          <li class="kcat"><a href="kit.html">Knitwear and basics</a>
+            <ul class="sub">
+              <li><a href="kit.html">Knitto wool crew</a></li>
+              <li><a href="kit.html">Good On heavyweight tees</a></li>
+            </ul>
+          </li>
+          <li class="kcat"><a href="kit.html">Trousers and shirts</a>
+            <ul class="sub">
+              <li><a href="kit.html">Service Works chef trousers</a></li>
+              <li><a href="kit.html">Universal Works shirts</a></li>
+            </ul>
+          </li>
+          <li class="kcat"><a href="kit.html">Footwear</a>
+            <ul class="sub">
+              <li><a href="kit.html">Paraboot</a></li>
+              <li><a href="kit.html">Red Wing Shoes</a></li>
+            </ul>
+          </li>
+          <li class="kcat"><a href="kit.html">Socks</a>
+            <ul class="sub">
+              <li><a href="kit.html">Darn Tough</a></li>
+            </ul>
+          </li>
+        </ul>
+        <a class="kfeat" href="mending.html">
+          <span class="kfeat-pic"><svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="300" height="300" fill="#e8e2d4"/><g fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M96 88 L52 106 L38 220 L70 224 L76 170 L78 250 L222 250 L224 170 L230 224 L262 220 L248 106 L204 88" fill="#c9bfa8"/><path d="M96 88 Q125 118 150 106 Q175 118 204 88"/><path d="M96 88 L118 72 L150 82 L182 72 L204 88" fill="#b5a88c"/><path d="M150 106 L150 250"/><rect x="92" y="180" width="44" height="52" rx="4" fill="#c9bfa8"/><rect x="164" y="180" width="44" height="52" rx="4" fill="#c9bfa8"/></g></svg></span>
+          <span class="lbl">Practical</span>
+          <span class="kfeat-title">Waxed cotton, kept</span>
+          <span class="kfeat-link">Read the guide</span>
+        </a>
+      </div>
+      </div>
+      </li>
+      <li><a href="bench.html">Bench</a></li>
+    </ul>
+  </nav>
+</header>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="v-open" viewBox="-120 -80 240 120">
+      <g stroke="currentColor" stroke-width="10" fill="none"><path d="M-80 -8 L-102 -25"/><path d="M-58 -22 L-73 -48"/><path d="M-32 -30 L-40 -58"/><path d="M-4 -33 L-4 -62"/><path d="M24 -31 L32 -59"/><path d="M52 -24 L67 -50"/><path d="M76 -10 L98 -27"/></g>
+      <g fill="currentColor"><circle cx="-102" cy="-25" r="5"/><circle cx="-73" cy="-48" r="5"/><circle cx="-40" cy="-58" r="5"/><circle cx="-4" cy="-62" r="5"/><circle cx="32" cy="-59" r="5"/><circle cx="67" cy="-50" r="5"/><circle cx="98" cy="-27" r="5"/></g>
+      <circle cx="-2" cy="0" r="35" fill="currentColor"/>
+      <path d="M-96 0 Q-44 -36 -2 -36 Q42 -36 96 0 Q42 36 -2 36 Q-44 36 -96 0 Z" fill="none" stroke="currentColor" stroke-width="12" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="v-flip" viewBox="-120 -40 240 120">
+      <g transform="rotate(180)">
+        <g stroke="currentColor" stroke-width="10" fill="none"><path d="M-80 -8 L-102 -25"/><path d="M-58 -22 L-73 -48"/><path d="M-32 -30 L-40 -58"/><path d="M-4 -33 L-4 -62"/><path d="M24 -31 L32 -59"/><path d="M52 -24 L67 -50"/><path d="M76 -10 L98 -27"/></g>
+        <g fill="currentColor"><circle cx="-102" cy="-25" r="5"/><circle cx="-73" cy="-48" r="5"/><circle cx="-40" cy="-58" r="5"/><circle cx="-4" cy="-62" r="5"/><circle cx="32" cy="-59" r="5"/><circle cx="67" cy="-50" r="5"/><circle cx="98" cy="-27" r="5"/></g>
+        <circle cx="-2" cy="0" r="35" fill="currentColor"/>
+        <path d="M-96 0 Q-44 -36 -2 -36 Q42 -36 96 0 Q42 36 -2 36 Q-44 36 -96 0 Z" fill="none" stroke="currentColor" stroke-width="12" stroke-linejoin="round"/>
+      </g>
+    </symbol>
+    <symbol id="v-closed" viewBox="-120 -40 240 120">
+      <path d="M-96 -6 Q-44 30 -2 30 Q42 30 96 -6" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/>
+      <g stroke="currentColor" stroke-width="10" fill="none"><path d="M-80 2 L-102 19"/><path d="M-58 16 L-73 42"/><path d="M-32 24 L-40 52"/><path d="M-4 27 L-4 56"/><path d="M24 25 L32 53"/><path d="M52 18 L67 44"/><path d="M76 4 L98 21"/></g>
+      <g fill="currentColor"><circle cx="-102" cy="19" r="5"/><circle cx="-73" cy="42" r="5"/><circle cx="-40" cy="52" r="5"/><circle cx="-4" cy="56" r="5"/><circle cx="32" cy="53" r="5"/><circle cx="67" cy="44" r="5"/><circle cx="98" cy="21" r="5"/></g>
+    </symbol>
+  </svg>
+<main class="mend">
+  <h1>Mending</h1>
+  <p class="lede">How to fix the things you own, and who to take them to when you can't. Organised by what's gone wrong, not by trade. London first.</p>
+  <p class="key">
+    <span><svg class="vi"><use href="#v-open"/></svg>Do it yourself</span>
+    <span><svg class="vi"><use href="#v-flip"/></svg>Either</span>
+    <span><svg class="vi"><use href="#v-closed"/></svg>Take it to someone</span>
+  </p>
+
+  <h2>Stains</h2>
+    <a class="problem" href="#fresh-stains">
+      <span class="pname">Something spilt tonight</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Do it yourself"><use href="#v-open"/></svg></span>
+      <p class="pline">Cold water, blot, don't rub, and no heat until it's gone. Most stains are lost in the first hour, not the wash.</p>
+    </a>
+    <a class="problem" href="#set-stains">
+      <span class="pname">A stain that has been there for months</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Either"><use href="#v-flip"/></svg></span>
+      <p class="pline">Set-in oil and tannin can still shift with the right solvent and patience. If it's silk, wool suiting or anything you'd mind ruining, a specialist cleaner is cheaper than a mistake.</p>
+    </a>
+    <a class="problem" href="#grease-wool">
+      <span class="pname">Grease on wool or tweed</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Do it yourself"><use href="#v-open"/></svg></span>
+      <p class="pline">Fuller's earth or cornflour overnight, brush out, repeat. Wool forgives more than people expect.</p>
+    </a>
+    <a class="problem" href="#mould">
+      <span class="pname">Mould on a wax jacket</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Do it yourself"><use href="#v-open"/></svg></span>
+      <p class="pline">White vinegar, a soft brush and an afternoon outdoors, then re-wax. It comes from being stored damp, so fix the cupboard as well.</p>
+    </a>
+    <a class="problem" href="#suede-marks">
+      <span class="pname">Marks on suede or nubuck</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Take it to someone"><use href="#v-closed"/></svg></span>
+      <p class="pline">Suede punishes home remedies. A cleaner who does suede regularly, and accept it may come back a shade darker.</p>
+    </a>
+
+  <h2>Knitwear</h2>
+    <a class="problem" href="#moth-holes">
+      <span class="pname">Moth holes in a jumper</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Do it yourself"><use href="#v-open"/></svg></span>
+      <p class="pline">A darn is an evening's work and the most forgiving repair there is. If it's cashmere and you want it to vanish, an invisible mender will rebuild the knit from about £90 a hole.</p>
+    </a>
+    <a class="problem" href="#thin-elbows">
+      <span class="pname">Thinning elbows and cuffs</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Do it yourself"><use href="#v-open"/></svg></span>
+      <p class="pline">Reinforce before it goes. Swiss darning over the worn patch, or a contrast darn if you'd rather it showed.</p>
+    </a>
+
+  <h2>Waxed cotton</h2>
+    <a class="problem" href="#rewax">
+      <span class="pname">Dry, faded wax jacket</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Do it yourself"><use href="#v-open"/></svg></span>
+      <p class="pline">A tin of wax, a hairdryer and a Sunday afternoon. The most common problem in the category and the easiest to solve.</p>
+    </a>
+    <a class="problem" href="#torn-wax">
+      <span class="pname">Torn or worn-through waxed cotton</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Take it to someone"><use href="#v-closed"/></svg></span>
+      <p class="pline">Patching wax properly means matching cloth and heat-sealing. A specialist waxed-cotton repairer, or the maker's own service.</p>
+    </a>
+    <a class="problem" href="#sticky-lining">
+      <span class="pname">Sticky or rotten tartan lining</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Take it to someone"><use href="#v-closed"/></svg></span>
+      <p class="pline">Replacing a lining is a full strip-down. Budget for it or decide the jacket has earned its retirement.</p>
+    </a>
+
+  <h2>Denim and workwear</h2>
+    <a class="problem" href="#denim-crotch">
+      <span class="pname">Blown-out crotch or thigh</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Either"><use href="#v-flip"/></svg></span>
+      <p class="pline">Machine darning over an internal patch. Doable at home with a sewing machine and patience; a denim repair bench will do it for £25–£60 with a few weeks' wait.</p>
+    </a>
+    <a class="problem" href="#hems">
+      <span class="pname">Hems and chainstitching</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Take it to someone"><use href="#v-closed"/></svg></span>
+      <p class="pline">A plain hem anyone can do. A chainstitch hem needs a Union Special, and there are only a handful in London.</p>
+    </a>
+
+  <h2>Fastenings</h2>
+    <a class="problem" href="#zips">
+      <span class="pname">Broken zip</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Either"><use href="#v-flip"/></svg></span>
+      <p class="pline">A lost slider is a five-minute fix with a replacement pull. A zip that's torn from the tape needs the whole thing replaced, which is a tailor's job.</p>
+    </a>
+    <a class="problem" href="#buttons">
+      <span class="pname">Missing or loose buttons</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Do it yourself"><use href="#v-open"/></svg></span>
+      <p class="pline">Learn to do this properly once, with a thread shank, and you'll never pay for it again.</p>
+    </a>
+
+  <h2>Shoes and leather</h2>
+    <a class="problem" href="#resole">
+      <span class="pname">Worn soles and heels</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Take it to someone"><use href="#v-closed"/></svg></span>
+      <p class="pline">Welted shoes are built to be resoled; do it before you wear through the welt. Glued soles are usually not worth it.</p>
+    </a>
+    <a class="problem" href="#leather-care">
+      <span class="pname">Dry, scuffed leather</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Do it yourself"><use href="#v-open"/></svg></span>
+      <p class="pline">Clean, condition, polish. Most leather that looks finished just needs feeding.</p>
+    </a>
+
+  <h2>Hats, gloves and the rest</h2>
+    <a class="problem" href="#reblock">
+      <span class="pname">Hat lost its shape</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Take it to someone"><use href="#v-closed"/></svg></span>
+      <p class="pline">A re-block over a wooden form is a hatter's job, and London still has hatters who do it.</p>
+    </a>
+    <a class="problem" href="#glove-split">
+      <span class="pname">Split glove seam</span>
+      <span class="verdict"><svg class="vi" role="img" aria-label="Take it to someone"><use href="#v-closed"/></svg></span>
+      <p class="pline">Fine leather seams want a glover's needle and someone who's done a thousand of them.</p>
+    </a>
+
+  <p class="checked">Each entry links to the people who do the work, with what they charge and what they won't take on. Entries carry the date they were last checked, because workshops move, pause and close.</p>
+</main>
+
+<footer class="foot">
+  <div class="foot-lead">
+  <a class="lockup" href="index.html" aria-label="Home">
+    <svg class="eye-closed" viewBox="-120 -60 240 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M-96 -6 Q-44 30 -2 30 Q42 30 96 -6" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/>
+      <g stroke="currentColor" stroke-width="10" fill="none">
+        <path d="M-80 2 L-102 19"/><path d="M-58 16 L-73 42"/><path d="M-32 24 L-40 52"/><path d="M-4 27 L-4 56"/><path d="M24 25 L32 53"/><path d="M52 18 L67 44"/><path d="M76 4 L98 21"/>
+      </g>
+      <g fill="currentColor"><circle cx="-102" cy="19" r="5"/><circle cx="-73" cy="42" r="5"/><circle cx="-40" cy="52" r="5"/><circle cx="-4" cy="56" r="5"/><circle cx="32" cy="53" r="5"/><circle cx="67" cy="44" r="5"/><circle cx="98" cy="21" r="5"/></g>
+    </svg>
+  </a>
+  <p class="tagline">Go the long way round.</p>
+  </div>
+  <div class="cols">
+    <ul>
+      <li><a href="index.html">Journal</a></li>
+      <li><a href="mending.html">Mending</a></li>
+      <li><a href="kit.html">Kit</a></li>
+      <li><a href="bench.html">Bench</a></li>
+    </ul>
+    <ul>
+      <li><a href="#">About</a></li>
+      <li><a href="#">Letters</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </div>
+  <div class="small lbl">
+    London<br>
+    &copy; 2026
+  </div>
+</footer>
+
+<script>
+  // Every 20 seconds the pupil glances towards the pointer, holds, then returns.
+  // The pupil narrows slightly as it looks aside and is clamped so its edge never crosses the lid line.
+  (function () {
+    var eye = document.querySelector('.eye');
+    var gaze = eye && eye.querySelector('.gaze');
+    if (!gaze || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    // Almond half-height at a given x (upper lid is the bezier -96,0 -> -44,-36 -> -2,-36 mirrored).
+    function halfHeight(x) {
+      x = Math.abs(x + 2) - 2; if (x > -2) x = -2 - (x + 2);            // fold onto the left half
+      if (x <= -96) return 0;
+      var lo = 0, hi = 1;
+      for (var i = 0; i < 20; i++) { var m = (lo + hi) / 2, bx = (1-m)*(1-m)*-96 + 2*(1-m)*m*-44 + m*m*-2; if (bx < x) lo = m; else hi = m; }
+      var t = (lo + hi) / 2;
+      return -(2*(1-t)*t*-36 + t*t*-36);
+    }
+    var R = 35, SHRINK = 0.86, LEEWAY = 5;                                  // lid stroke is 12 wide, so ~5 units of overlap is invisible
+    function fits(tx, ty) {
+      var r = R * SHRINK;
+      for (var k = 0; k < 36; k++) {
+        var a = k / 36 * Math.PI * 2, x = -2 + tx + r * Math.cos(a), y = ty + r * Math.sin(a);
+        if (Math.abs(y) > halfHeight(x) + LEEWAY) return false;
+      }
+      return true;
+    }
+
+    var px = null, py = null;
+    addEventListener('pointermove', function (e) { px = e.clientX; py = e.clientY; }, { passive: true });
+
+    function glance() {
+      if (px === null) return;
+      var b = eye.getBoundingClientRect();
+      var dx = px - (b.left + b.width / 2), dy = py - (b.top + b.height / 2);
+      var d = Math.hypot(dx, dy) || 1, reach = Math.min(1, d / 300);
+      var tx = (dx / d) * 44 * reach, ty = (dy / d) * 11 * reach;
+      var s = 1;
+      while (!fits(tx * s, ty * s) && s > 0) s -= 0.05;                   // pull the glance back until the pupil sits inside
+      tx *= s; ty *= s;
+      gaze.classList.remove('back');
+      gaze.style.transform = 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px) translate(-2px,0) scale(' + SHRINK + ') translate(2px,0)';
+      setTimeout(function () { gaze.classList.add('back'); gaze.style.transform = ''; }, 900);   // hold ~½ s after the glide out, then snap back
+    }
+    setInterval(glance, 20000);
+
+    // Idle blink: one quick close-and-open at a random interval between 20 and 40 seconds.
+    function blink() {
+      eye.classList.add('blink');
+      setTimeout(function () { eye.classList.remove('blink'); }, 260);
+      setTimeout(blink, 20000 + Math.random() * 20000);
+    }
+    setTimeout(blink, 12000 + Math.random() * 12000);
+  })();
+
+  // Tab favicon: the eye closes when you leave the tab and opens when you come back.
+  (function () {
+    var icon = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
+    if (!icon) return;
+    var open = icon.href, closed = open.replace('favicon.svg', 'favicon-closed.svg');
+    document.addEventListener('visibilitychange', function () {
+      icon.href = document.hidden ? closed : open;
+    });
+  })();
+</script>
+</body>
+</html>
