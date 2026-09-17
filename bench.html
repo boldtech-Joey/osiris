@@ -7,7 +7,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Arvo:wght@400;700&family=Hanken+Grotesk:wght@400;500&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
 <style>
   /* ---- tokens ---- */
   :root {
@@ -18,7 +19,7 @@
     --rule: #ddd8cc;
     --mustard: #d59a3e;
     --rust: #b8521d;
-    --font: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --font: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
     --mono: "Courier Prime", "Courier New", monospace;
   }
   @media (prefers-color-scheme: dark) {
@@ -182,6 +183,17 @@
   /* ---- demo content, delete on your site ---- */
   main { max-width: 640px; margin: 0 auto; padding: 96px clamp(16px, 4vw, 48px); color: var(--ink-soft); font-size: 17px; line-height: 1.6; }
   main h1 { font-size: 28px; font-weight: 500; color: var(--ink); margin: 0 0 16px; }
+
+  /* ---- type: chisel, crate, plain speech ---- */
+  :root { --display: "Marcellus", Georgia, serif; --slab: "Arvo", Georgia, serif; }
+  .lead h1, main h1, .mend h1, .kit h1, .bench h1, .post h2, .listing h2 { font-family: var(--display); font-weight: 400; letter-spacing: 0; }
+  .lead h1 { font-size: clamp(32px, 4.2vw, 46px); line-height: 1.1; }
+  main h1, .mend h1, .kit h1, .bench h1 { font-size: 32px; }
+  .post h2 { font-size: 23px; line-height: 1.2; }
+  .listing h2 { font-size: 26px; }
+  .kfeat-title, .card h3, .repairs .by { font-family: var(--slab); font-weight: 700; }
+  .card h3 { font-size: 16px; }
+  .kfeat-title { font-size: 19px; }
 </style>
 </head>
 <body>
