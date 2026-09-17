@@ -25,7 +25,7 @@
     :root:not([data-theme="light"]) { --ink: #f0ece3; --ink-soft: #a9a49a; --paper: #131210; --page: #1c1b18; --rule: #2c2a26; }
   }
   html { background: var(--page); }
-  body { margin: 0; font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  body { margin: 0; overflow-x: clip; font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; }
 
 
   /* ---- journal menu ---- */
@@ -142,6 +142,15 @@
   .kit { max-width: 960px; margin: 0 auto; padding: 72px clamp(16px, 4vw, 48px) 0; color: var(--ink); }
   .kit h1 { font-size: 28px; font-weight: 500; margin: 0 0 12px; }
   .kit .lede { font-size: 17px; line-height: 1.6; color: var(--ink-soft); max-width: 600px; margin: 0 0 16px; }
+  .kit.has-cover { padding-top: 0; }
+  /* full bleed: the 50% resolves against the centred content box, so this reaches both viewport edges */
+  .cover { position: relative; margin: 0 calc(50% - 50vw) 56px; min-height: clamp(400px, 72vh, 720px); display: grid; place-items: center; overflow: hidden; background: #2a2620; }
+  .cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
+  .cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.28), rgba(0,0,0,0.48)); }
+  .cover-text { position: relative; z-index: 1; text-align: center; padding: 48px clamp(16px, 4vw, 48px); }
+  .kit .cover h1 { margin: 0; color: #fff; font-size: clamp(34px, 5.2vw, 64px); line-height: 1.1; text-shadow: 0 1px 24px rgba(0, 0, 0, 0.35); }
+  .cover-sub { display: inline-block; margin: 22px 0 0; padding: 2px 18px; border-left: 1px solid rgba(255, 255, 255, 0.55); border-right: 1px solid rgba(255, 255, 255, 0.55); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255, 255, 255, 0.92); }
+  @media (max-width: 720px) { .cover { min-height: 62vh; margin-bottom: 36px; } .cover-text { padding: 32px 20px; } }
   .vi { width: 26px; height: 15px; color: var(--ink); display: inline-block; vertical-align: middle; }
   .kit .group { font-family: var(--mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 700; color: var(--ink-soft); margin: 48px 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--rule); }
   .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px clamp(20px, 3vw, 36px); }
@@ -329,8 +338,15 @@
     <symbol id="v-flip" viewBox="-120 -40 240 120"><g transform="rotate(180)"><g stroke="currentColor" stroke-width="10" fill="none"><path d="M-80 -8 L-102 -25"/><path d="M-58 -22 L-73 -48"/><path d="M-32 -30 L-40 -58"/><path d="M-4 -33 L-4 -62"/><path d="M24 -31 L32 -59"/><path d="M52 -24 L67 -50"/><path d="M76 -10 L98 -27"/></g><g fill="currentColor"><circle cx="-102" cy="-25" r="5"/><circle cx="-73" cy="-48" r="5"/><circle cx="-40" cy="-58" r="5"/><circle cx="-4" cy="-62" r="5"/><circle cx="32" cy="-59" r="5"/><circle cx="67" cy="-50" r="5"/><circle cx="98" cy="-27" r="5"/></g><circle cx="-2" cy="0" r="35" fill="currentColor"/><path d="M-96 0 Q-44 -36 -2 -36 Q42 -36 96 0 Q42 36 -2 36 Q-44 36 -96 0 Z" fill="none" stroke="currentColor" stroke-width="12" stroke-linejoin="round"/></g></symbol>
     <symbol id="v-closed" viewBox="-120 -40 240 120"><path d="M-96 -6 Q-44 30 -2 30 Q42 30 96 -6" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/><g stroke="currentColor" stroke-width="10" fill="none"><path d="M-80 2 L-102 19"/><path d="M-58 16 L-73 42"/><path d="M-32 24 L-40 52"/><path d="M-4 27 L-4 56"/><path d="M24 25 L32 53"/><path d="M52 18 L67 44"/><path d="M76 4 L98 21"/></g><g fill="currentColor"><circle cx="-102" cy="19" r="5"/><circle cx="-73" cy="42" r="5"/><circle cx="-40" cy="52" r="5"/><circle cx="-4" cy="56" r="5"/><circle cx="32" cy="53" r="5"/><circle cx="67" cy="44" r="5"/><circle cx="98" cy="21" r="5"/></g></symbol>
   </svg>
-<main class="kit">
-  <h1>Kit</h1>
+<main class="kit has-cover">
+  <section class="cover">
+    <img src="images/kit-cover.avif" width="3271" height="2179" fetchpriority="high" decoding="async"
+         alt="A worn leather boot, a camera and a pocket knife resting on dark green waxed canvas.">
+    <div class="cover-text">
+      <h1>Kit</h1>
+      <p class="cover-sub">Things worth buying once</p>
+    </div>
+  </section>
   <p class="lede">A small shop of things worth buying once. We stock a few makers we'd stand behind at the bench, in the sizes and colours we'd actually wear, and nothing else.</p>
   <h2 class="group">Outerwear</h2>
   <div class="cards">
