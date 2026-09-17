@@ -143,6 +143,11 @@
   .bench { max-width: 960px; margin: 0 auto; padding: 72px clamp(16px, 4vw, 48px) 0; color: var(--ink); }
   .bench h1 { font-size: 28px; font-weight: 500; margin: 0 0 12px; }
   .bench .lede { font-size: 17px; line-height: 1.6; color: var(--ink-soft); max-width: 600px; margin: 0 0 40px; }
+  .bench.has-cover { padding-top: 40px; }
+  .cover { margin: 0 0 36px; }
+  .cover img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; object-position: 50% 45%; background: #e8e2d4; border-radius: 4px; }
+  .cover figcaption { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+  @media (max-width: 720px) { .cover img { aspect-ratio: 4 / 3; } .cover { margin-bottom: 28px; } }
   .mark { display: grid; grid-template-columns: 96px 1fr; gap: 24px; align-items: center; padding: 24px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin-bottom: 64px; font-size: 15px; line-height: 1.55; color: var(--ink-soft); }
   .mark p { margin: 0; }
   .vi { width: 26px; height: 15px; color: var(--ink); display: inline-block; vertical-align: middle; }
@@ -354,7 +359,12 @@
       <g stroke="currentColor" stroke-width="7" stroke-linecap="round" fill="none" stroke-dasharray="9 6"><path d="M-80 2 L-102 19"/><path d="M-58 16 L-73 42"/><path d="M-32 24 L-40 52"/><path d="M-4 27 L-4 56"/><path d="M24 25 L32 53"/><path d="M52 18 L67 44"/><path d="M76 4 L98 21"/></g>
     </symbol>
   </svg>
-<main class="bench">
+<main class="bench has-cover">
+  <figure class="cover">
+    <img src="images/bench-cover.jpg" width="2000" height="1090" fetchpriority="high" decoding="async"
+         alt="A tan waxed-cotton chore jacket laid flat on the bench, hands smoothing the collar, a red check shirt folded alongside.">
+    <figcaption>On the bench this week.</figcaption>
+  </figure>
   <h1>The Bench</h1>
   <p class="lede">Garments that came to us broken and left fixed. Every piece is mended properly, marked, and given a number so you can see exactly what was done to it and by whom. Nothing is hidden and nothing is pretended new.</p>
 
